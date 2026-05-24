@@ -1,0 +1,30 @@
+============================================================
+  MVPX FULL REPORT
+  2026-05-24 17:40
+============================================================
+
+BACKTEST SUMMARY
+------------------------------------------------------------
+  Total Return              +188.1%     +197.7%       -9.6%
+  CAGR                       +15.4%      +15.9%       -0.5%
+  Max Drawdown               -38.2%      -33.9%       -4.2%
+  Ann. Volatility            +22.5%      +19.7%       +2.8%
+  Sharpe Ratio                 0.57        0.65       -0.07
+  Correlation                  0.80        1.00           —
+
+STRESS TESTS
+------------------------------------------------------------
+
+  2008 Global Financial Crisis  (Oct 2007 → Jun 2009)
+  Total return:  MVPX -22.9%  |  S&P -40.1%  |  Diff +17.1%
+  Max drawdown:  MVPX -55.1%  |  S&P -56.8%  |  Diff +1.6%
+
+  2020 COVID Crash & Recovery  (Jan 2020 → Mar 2021)
+  Total return:  MVPX +48.5%  |  S&P +21.5%  |  Diff +27.0%
+  Max drawdown:  MVPX -38.2%  |  S&P -33.9%  |  Diff -4.3%
+
+  2022 Fed Rate Hike Cycle  (Jan 2022 → Jan 2023)
+  Total return:  MVPX -14.7%  |  S&P -16.2%  |  Diff +1.5%
+  Max drawdown:  MVPX -31.3%  |  S&P -25.4%  |  Diff -5.9%
+
+============================================================
