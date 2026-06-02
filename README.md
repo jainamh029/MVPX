@@ -1,40 +1,83 @@
 # MVPX — U.S. Sports Economy Index
 
-> A custom, conviction-weighted thematic index tracking 18 US-listed companies across the full sports economy — broadcasting, leagues & venues, apparel & equipment, gaming & betting, sponsorship & media, and motorsport.
+> A conviction-weighted thematic index tracking 18 U.S.-listed companies across the full sports economy — broadcasting, leagues & venues, apparel & equipment, gaming & betting, sponsorship & media, and motorsport — backtested against the S&P 500 on **real Yahoo Finance data**.
+
+<p>
+  <a href="https://jainamh029.github.io/MVPX/"><img alt="Live dashboard" src="https://img.shields.io/badge/live-dashboard-7F77DD"></a>
+  <img alt="Python" src="https://img.shields.io/badge/python-3.9%2B-1D9E75">
+  <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-555">
+  <img alt="Data" src="https://img.shields.io/badge/data-Yahoo%20Finance-BA7517">
+</p>
+
+**🔗 Live dashboard → https://jainamh029.github.io/MVPX/**
+
+![MVPX vs S&P 500 — growth of $10,000](mvpx_output/01_mvpx_vs_sp500_cumulative.png)
 
 ---
 
 ## What is MVPX?
 
-MVPX is a **hypothetical thematic index** built to capture the performance of the US sports economy as a single investable portfolio. It covers every layer of the sports business — from live event operators and combat sports franchises to sports betting platforms, premium apparel brands, streaming rights holders, and Formula 1.
+MVPX is a **hypothetical thematic index** built to capture the performance of the U.S. sports economy as a single investable portfolio. It spans every layer of the sports business — live-event operators and combat-sports franchises, sports-betting platforms, premium apparel brands, streaming rights holders, and Formula 1.
 
-The index is **conviction-weighted**, not market-cap weighted. Higher-conviction picks carry more weight regardless of company size, which concentrates exposure to the strongest structural tailwinds in the theme.
+The index is **conviction-weighted**, not market-cap weighted: higher-conviction picks carry more weight regardless of company size, concentrating exposure to the strongest structural tailwinds in the theme.
 
-> ⚠️ **Disclaimer:** MVPX is a research and educational project. It is not a real traded index, ETF, or investment product. Nothing in this repository constitutes investment advice. All backtests are hypothetical and based on historical data that does not guarantee future results.
+A single command (`python mvpx_analysis.py`) pulls live prices, builds the index, runs the full backtest and three historical stress tests, renders 12 charts, and exports the exact figures the [live dashboard](https://jainamh029.github.io/MVPX/) displays — so the website, the report, and the charts are always one and the same numbers.
+
+> ⚠️ **Disclaimer:** MVPX is a research and educational project. It is **not** a real traded index, ETF, or investment product, and nothing here is investment advice. All backtests are hypothetical; historical data does not guarantee future results.
 
 ---
 
-## Index Construction
+## Results
+
+*Backtest 2019‑01‑02 → 2026‑05‑29 (refreshes every time you run the script). RF = 4%. S&P 500 = `^GSPC`.*
+
+| Metric | MVPX | S&P 500 |
+|---|---:|---:|
+| Total Return | +192.2% | +202.0% |
+| CAGR | +15.6% | +16.1% |
+| Sharpe Ratio | 0.58 | 0.66 |
+| Max Drawdown | −38.2% | −33.9% |
+| Ann. Volatility | 22.4% | 19.6% |
+| Beta vs S&P | 0.91 | 1.00 |
+| Correlation | 0.80 | — |
+
+**The honest read:** on a buy-and-hold basis MVPX roughly *matched* the S&P 500 (it trailed slightly on total return and Sharpe while carrying more volatility). Where the theme earned its keep was **crisis resilience and recovery** — see the stress tests below — plus standout momentum years (2020, 2023, 2024).
+
+### Stress tests
+
+Crisis windows use the actual market data from each period, with weights frozen (no rebalance during the crisis).
+
+| Scenario | Window | MVPX total return | S&P 500 | Edge |
+|---|---|---:|---:|---:|
+| 2008 Global Financial Crisis | Oct 2007 – Jun 2009 | −22.9% | −40.1% | **+17.1 pp** |
+| 2020 COVID Crash & Recovery | Jan 2020 – Mar 2021 | +48.5% | +21.5% | **+27.0 pp** |
+| 2022 Fed Rate-Hike Cycle | Jan 2022 – Jan 2023 | −14.7% | −16.2% | **+1.5 pp** |
+
+MVPX outperformed the benchmark in all three modeled crises — the subscription/broadcast and counter-cyclical gaming names cushion drawdowns, while the betting and live-events names drive the recovery.
+
+---
+
+## Index construction
 
 | Parameter | Value |
 |---|---|
-| Holdings | 18 stocks |
+| Holdings | 18 (15 with full 2019+ history; 3 listed later) |
 | Segments | 6 |
-| Methodology | Conviction-weighted |
-| Rebalance frequency | Quarterly |
+| Methodology | Conviction-weighted, 3 tiers |
+| Rebalance | Quarterly (reset to target weights) |
 | Benchmark | S&P 500 (`^GSPC`) |
-| Data source | Yahoo Finance via `yfinance` |
+| Data source | Yahoo Finance via `yfinance` (adjusted close) |
 | Backtest start | 2019-01-01 |
 
-### Holdings & Weights
+### Holdings & weights
 
 | Ticker | Company | Weight | Segment | Conviction |
-|---|---|---|---|---|
+|---|---|---:|---|---|
 | FLUT | Flutter Entertainment (FanDuel) | 8.35% | Gaming & Betting | ★ High |
 | TKO | TKO Group (WWE / UFC) | 8.33% | Leagues & Venues | ★ High |
 | LYV | Live Nation Entertainment | 8.33% | Sponsorship & Media | ★ High |
 | FWONA | Liberty Media (Formula 1) | 8.33% | Motorsport | ★ High |
-| ONON | On Holding AG | 8.33% | Apparel & Equipment | ★ High |
+| ONON | On Holding AG † | 8.33% | Apparel & Equipment | ★ High |
 | NFLX | Netflix | 8.33% | Broadcasting | ★ High |
 | DIS | Walt Disney / ESPN | 5.00% | Broadcasting | ● Medium |
 | ADDYY | Adidas ADR | 5.00% | Apparel & Equipment | ● Medium |
@@ -42,183 +85,117 @@ The index is **conviction-weighted**, not market-cap weighted. Higher-conviction
 | FOX | Fox Corporation | 5.00% | Broadcasting | ● Medium |
 | DKNG | DraftKings | 5.00% | Gaming & Betting | ● Medium |
 | WBD | Warner Bros. Discovery | 5.00% | Broadcasting | ● Medium |
-| EDR | Endeavor Group | 5.00% | Leagues & Venues | ● Medium |
+| EDR | Endeavor Group † | 5.00% | Leagues & Venues | ● Medium |
 | CHDN | Churchill Downs | 5.00% | Leagues & Venues | ● Medium |
 | TTWO | Take-Two Interactive | 2.50% | Gaming & Betting | ◆ Tactical |
 | MSGS | Madison Square Garden Sports | 2.50% | Leagues & Venues | ◆ Tactical |
 | GOLF | Acushnet Holdings (Titleist) | 2.50% | Apparel & Equipment | ◆ Tactical |
-| LSEA | Lucky Strike Entertainment | 2.50% | Leagues & Venues | ◆ Tactical |
+| LSEA | Lucky Strike Entertainment † | 2.50% | Leagues & Venues | ◆ Tactical |
 
-### Segment Breakdown
+† Listed after the 2019 backtest start, so excluded from the historical performance figures (flagged on the dashboard). The script automatically drops any name with < 80% data coverage and renormalises the remaining weights.
+
+### Segment breakdown
 
 | Segment | Weight |
-|---|---|
-| Broadcasting | ~28% |
-| Gaming & Betting | ~18% |
-| Leagues & Venues | ~18% |
-| Apparel & Equipment | ~18% |
-| Sponsorship & Media | ~8% |
-| Motorsport | ~8% |
+|---|---:|
+| Leagues & Venues | 23.3% |
+| Broadcasting | 23.3% |
+| Gaming & Betting | 20.9% |
+| Apparel & Equipment | 15.8% |
+| Sponsorship & Media | 8.3% |
+| Motorsport | 8.3% |
 
 ---
 
-## What the Script Does
+## The website
 
-`mvpx_analysis.py` runs a complete quantitative analysis in one command:
+The [live dashboard](https://jainamh029.github.io/MVPX/) is a single static `index.html` (Chart.js + custom CSS, no build step). It is **fully data-driven**: every number, chart, and holding is read from `mvpx_data.js`, which the analysis script regenerates on each run.
 
-1. **Downloads real price data** from Yahoo Finance for all 18 holdings and the S&P 500
-2. **Builds the MVPX index** with quarterly rebalancing back to conviction weights
-3. **Backtests** MVPX vs S&P 500 from 2019 to today
-4. **Stress tests** against three historical crisis scenarios using the actual market data from those periods:
-   - 2008 Global Financial Crisis (Oct 2007 → Jun 2009)
-   - 2020 COVID Crash & Recovery (Jan 2020 → Mar 2021)
-   - 2022 Fed Rate Hike Cycle (Jan 2022 → Jan 2023)
-5. **Generates 9 charts** and a full numerical report
+```
+mvpx_analysis.py  ──►  mvpx_data.js  ──►  index.html (dashboard)
+                       (window.MVPX_DATA)
+```
+
+That means the site can never drift from the analysis — re-run the script and the dashboard updates to the latest backtest. It works both on GitHub Pages and when you open `index.html` directly from disk (the data ships as a JS assignment, so no server or CORS setup is needed).
+
+### Publishing it (GitHub Pages)
+
+1. Commit `index.html` and `mvpx_data.js` to the default branch.
+2. Repo **Settings → Pages → Build and deployment → Deploy from a branch**, branch `main`, folder `/ (root)`.
+3. The site goes live at `https://<username>.github.io/MVPX/`.
 
 ---
 
-## Requirements
-
-- Python 3.8 or higher
-- Internet connection (for Yahoo Finance data download)
-
-### Dependencies
+## Quickstart
 
 ```bash
-pip install yfinance pandas numpy matplotlib seaborn scipy
-```
+# 1. Clone
+git clone https://github.com/jainamh029/MVPX.git
+cd MVPX
 
----
+# 2. (optional) virtual environment
+python -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
 
-## Installation
+# 3. Install dependencies
+pip install -r requirements.txt
 
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/YOUR-USERNAME/mvpx-index.git
-cd mvpx-index
-```
-
-### 2. (Optional) Create a virtual environment
-
-```bash
-python -m venv venv
-
-# Mac / Linux
-source venv/bin/activate
-
-# Windows
-venv\Scripts\activate
-```
-
-### 3. Install dependencies
-
-```bash
-pip install yfinance pandas numpy matplotlib seaborn scipy
-```
-
----
-
-## Usage
-
-```bash
+# 4. Run the full analysis
 python mvpx_analysis.py
 ```
 
-The script will print progress to the console as it downloads data and generates each chart. A typical run takes 30–90 seconds depending on your internet connection.
+The script prints progress as it downloads data and renders each chart. A typical run takes 30–90 seconds depending on your connection. Internet access is required (live Yahoo Finance download).
+
+To preview the dashboard locally afterwards, just open `index.html` in a browser.
 
 ---
 
-## Output Files
+## Output files
 
-All outputs are saved to `./mvpx_output/` automatically.
+Charts and the text report land in `./mvpx_output/`; the website data file is written to the project root.
 
 | File | Description |
 |---|---|
-| `01_mvpx_vs_sp500_cumulative.png` | Growth of $10,000 — MVPX vs S&P 500 full backtest |
-| `02_annual_returns_comparison.png` | Side-by-side annual return bars, year by year |
-| `03_drawdown_comparison.png` | Rolling drawdown from peak for both indexes |
-| `04_stress_2008.png` | 2008 GFC window — line chart + total return comparison |
+| `01_mvpx_vs_sp500_cumulative.png` | Growth of $10,000 — MVPX vs S&P 500, full backtest |
+| `02_annual_returns_comparison.png` | Year-by-year annual return bars |
+| `03_drawdown_comparison.png` | Rolling drawdown from peak, both indexes |
+| `04_stress_2008.png` | 2008 GFC window — path + total-return comparison |
 | `05_stress_2020.png` | 2020 COVID crash and V-shaped recovery |
-| `06_stress_2022.png` | 2022 Fed rate hike cycle Jan 2022 – Jan 2023 |
+| `06_stress_2022.png` | 2022 Fed rate-hike cycle |
 | `07_stock_heatmap.png` | Annual return heatmap for every holding |
-| `08_rolling_correlation.png` | 12-month rolling correlation to S&P 500 |
+| `08_rolling_correlation.png` | 12-month rolling correlation to the S&P 500 |
 | `09_segment_weights_pie.png` | Segment breakdown + individual position weights |
+| `10_risk_return_scatter.png` | Risk/return bubble chart (bubble size = weight) |
+| `11_rolling_sharpe.png` | Rolling 12-month Sharpe ratio, both indexes |
+| `12_monthly_return_heatmap.png` | Monthly return calendar, MVPX vs S&P 500 |
 | `mvpx_full_report.txt` | Complete numerical report — all metrics, all scenarios |
+| `../mvpx_data.js` | Real figures consumed by the dashboard |
 
 ---
 
-## Stress Test Scenarios
+## Methodology notes
 
-### Scenario 1 — 2008 Global Financial Crisis
-- **Period:** October 2007 → June 2009
-- **S&P 500 peak-to-trough:** −56.8%
-- **Why it hurts MVPX:** Consumer discretionary collapse. Sports betting, live events, premium apparel, and racing venues are among the first spending categories consumers cut in a credit-driven recession. High-conviction live-events positions (LYV, TKO, CHDN) share correlated drawdown risk.
-- **Built-in shelter:** NFLX (subscription model), EA (gaming is counter-cyclical), FOX (broadcast rights locked in)
-
-### Scenario 2 — 2020 COVID Crash & Recovery
-- **Period:** January 2020 → March 2021
-- **S&P 500 crash:** −33.9% (Feb → Mar 2020)
-- **S&P 500 recovery:** +65.4% (Mar → Dec 2020)
-- **Why MVPX is interesting here:** The crash phase is nearly market-neutral (NFLX and EA cushion the fall). The recovery dramatically outperforms as sports return, betting legalisation accelerates, and pent-up live event demand explodes.
-- **Biggest crash drag:** LYV (live events shutdown, 2.4× crash beta)
-- **Biggest recovery driver:** FLUT, TKO, DKNG (sports betting legalisation wave)
-
-### Scenario 3 — 2022 Fed Rate Hike Cycle
-- **Period:** January 2022 → January 2023
-- **S&P 500 drawdown:** −25.4%
-- **Why it hurts MVPX:** High-P/E and unprofitable growth names (FLUT, DKNG, NFLX) get re-rated aggressively when the discount rate rises. MVPX carries more duration risk than the broad market.
-- **Rate-hike survivors inside MVPX:** FWONA, TKO, CHDN (profitable, lower-multiple, earnings-based)
+- **Price data:** Yahoo Finance adjusted close (splits and dividends included).
+- **Index construction:** daily return simulation with quarterly rebalancing back to target weights.
+- **Weight normalisation:** holdings with < 80% coverage over the window are dropped and remaining weights renormalised.
+- **Stress tests:** crisis windows use actual market data with weights frozen (no rebalance during the crisis — a realistic "ride it out" simulation).
+- **Sharpe ratio:** 4% annual risk-free rate.
+- **Benchmark:** S&P 500 (`^GSPC`).
 
 ---
 
-## Hedge Recommendations
-
-| Scenario | Instrument | Rationale |
-|---|---|---|
-| 2008 GFC | XLP | Consumer Staples ETF — counter-cyclical, zero correlation to sports spending |
-| 2008 GFC | GLD | Gold — safe haven, inverse to consumer discretionary |
-| 2008 GFC | TLT | Long Treasuries — rallied 25%+ in 2008 crisis |
-| 2020 Crash | Overweight NFLX | Subscription revenue is lockdown-proof; acts as natural crash cushion |
-| 2020 Crash | Overweight EA | Video gaming is counter-cyclical; in-index position to size up |
-| 2020 Crash | LYV put collar | Highest crash beta (2.4×); cheapest to hedge at the position level |
-| 2022 Hikes | SHV / BIL | Short-duration T-bills — yield rises with rates, direct offset |
-| 2022 Hikes | XLE | Energy ETF — best sector 2022, completely uncorrelated to sports |
-| 2022 Hikes | Internal rotation | Tilt toward CHDN, FWONA, TKO; reduce FLUT, DKNG weight |
-| Universal | 5% cash sleeve | Always maintain dry powder — cuts drawdown ~3pp in any scenario |
-| Universal | Quarterly rebalance | Mechanical discipline forces buy-low/sell-high — cheapest structural hedge |
-
----
-
-## Methodology Notes
-
-- **Price data:** Yahoo Finance adjusted close prices (splits and dividends included)
-- **Index construction:** Daily return simulation with quarterly rebalancing to target weights
-- **Weight normalisation:** Holdings with insufficient history are automatically dropped and remaining weights renormalised
-- **Stress tests:** Crisis windows use actual market data from those periods with weights frozen (no rebalance during crisis — realistic simulation)
-- **Sharpe ratio:** Calculated using 4% risk-free rate assumption
-- **Benchmark:** S&P 500 total return index (`^GSPC`)
-
----
-
-## Project Structure
+## Project structure
 
 ```
-mvpx-index/
-│
-├── mvpx_analysis.py          # Main script — all analysis in one file
-├── README.md                 # This file
-│
-└── mvpx_output/              # Auto-created when script runs
-    ├── 01_mvpx_vs_sp500_cumulative.png
-    ├── 02_annual_returns_comparison.png
-    ├── 03_drawdown_comparison.png
-    ├── 04_stress_2008.png
-    ├── 05_stress_2020.png
-    ├── 06_stress_2022.png
-    ├── 07_stock_heatmap.png
-    ├── 08_rolling_correlation.png
-    ├── 09_segment_weights_pie.png
+MVPX/
+├── mvpx_analysis.py      # Main script — backtest, stress tests, charts, data export
+├── index.html            # Data-driven dashboard (GitHub Pages site)
+├── mvpx_data.js          # Real figures the dashboard reads (generated)
+├── requirements.txt
+├── LICENSE
+├── README.md
+└── mvpx_output/          # Generated charts + text report
+    ├── 01_…_cumulative.png … 12_monthly_return_heatmap.png
     └── mvpx_full_report.txt
 ```
 
@@ -226,39 +203,34 @@ mvpx-index/
 
 ## Customisation
 
-All index parameters are defined at the top of `mvpx_analysis.py` in the `MVPX` dictionary. To modify the index:
+All index parameters live at the top of `mvpx_analysis.py`:
 
 ```python
 MVPX = {
     # ticker : (weight_pct, segment, conviction)
-    "FLUT":  (8.35, "Gaming & Betting", "High"),
+    "FLUT": (8.35, "Gaming & Betting", "High"),
     # add or remove holdings here
 }
+
+BACKTEST_START = "2019-01-01"   # change the start date
 ```
 
-To change the backtest window:
-
-```python
-BACKTEST_START = "2019-01-01"   # change start date
-BACKTEST_END   = "2026-01-01"   # or set a fixed end date
-```
-
-To change the rebalance frequency, find the `build_index()` call and change `rebalance="QE"` to `"ME"` (monthly), `"YE"` (annual), or `"10YE"` (buy-and-hold).
+Rebalance frequency is set in the `build_index()` call — `"QE"` (quarterly, default), `"ME"` (monthly), `"YE"` (annual), or a long horizon for buy-and-hold.
 
 ---
 
 ## Contributing
 
-Pull requests are welcome. If you want to add a new holding, improve the stress test methodology, or add additional output formats (CSV exports, PDF reports), feel free to open an issue or submit a PR.
+Pull requests welcome — new holdings, improved stress-test methodology, or extra output formats (CSV exports, PDF reports). Open an issue or PR.
 
 ---
 
 ## License
 
-MIT License — free to use, modify, and distribute with attribution.
+[MIT](LICENSE) — free to use, modify, and distribute with attribution.
 
 ---
 
 ## Author
 
-Built as a portfolio strategy research project. Index concept, construction methodology, and stress test framework designed from scratch. Data sourced entirely from Yahoo Finance — no proprietary or estimated data.
+Built as a quantitative portfolio-strategy research project. Index concept, construction methodology, and stress-test framework designed from scratch; data sourced entirely from Yahoo Finance.

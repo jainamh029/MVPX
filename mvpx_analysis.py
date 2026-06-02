@@ -10,24 +10,27 @@ SETUP (run once):
 RUN:
     python mvpx_analysis.py
 
-OUTPUTS (saved to ./mvpx_output/):
-    01_mvpx_vs_sp500_cumulative.png
-    02_annual_returns_comparison.png
-    03_drawdown_comparison.png
-    04_stress_2008.png
-    05_stress_2020.png
-    06_stress_2022.png
-    07_stock_heatmap.png
-    08_rolling_correlation.png
-    09_segment_weights_pie.png
-    10_risk_return_scatter.png   (NEW)
-    11_rolling_sharpe.png        (NEW)
-    12_monthly_return_heatmap.png(NEW)
-    mvpx_full_report.txt
+OUTPUTS:
+    ./mvpx_output/
+        01_mvpx_vs_sp500_cumulative.png
+        02_annual_returns_comparison.png
+        03_drawdown_comparison.png
+        04_stress_2008.png
+        05_stress_2020.png
+        06_stress_2022.png
+        07_stock_heatmap.png
+        08_rolling_correlation.png
+        09_segment_weights_pie.png
+        10_risk_return_scatter.png
+        11_rolling_sharpe.png
+        12_monthly_return_heatmap.png
+        mvpx_full_report.txt
+    ./mvpx_data.js     (real figures consumed by the index.html dashboard)
 ================================================================================
 """
 
 import os
+import json
 import time
 import warnings
 from datetime import datetime
@@ -302,6 +305,9 @@ shr_mi   = sharpe(mi);      shr_sp   = sharpe(sp_idx)
 vol_mi   = mi.pct_change().std() * np.sqrt(252)
 vol_sp   = sp_idx.pct_change().std() * np.sqrt(252)
 corr_all = mi.pct_change().corr(sp_idx.pct_change())
+_rm, _rs = mi.pct_change().dropna(), sp_idx.pct_change().dropna()
+_ci      = _rm.index.intersection(_rs.index)
+beta_mi  = _rm.loc[_ci].cov(_rs.loc[_ci]) / _rs.loc[_ci].var()
 tot_mi   = (mi.iloc[-1]   / mi.iloc[0]   - 1) * 100
 tot_sp   = (sp_idx.iloc[-1] / sp_idx.iloc[0] - 1) * 100
 ann_mi   = ann_returns(mi)
@@ -671,6 +677,94 @@ rpt(); rpt("="*68)
 with open(os.path.join(OUTPUT_DIR,"mvpx_full_report.txt"),"w") as f:
     f.write("\n".join(lines))
 print("    ✓  mvpx_full_report.txt")
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 8b.  WEBSITE DATA EXPORT  →  mvpx_data.js   (consumed by index.html)
+#      Written as a JS assignment (window.MVPX_DATA = {...}) so the dashboard
+#      works when opened directly from disk as well as over GitHub Pages.
+# ─────────────────────────────────────────────────────────────────────────────
+print("\n[6b] Exporting website data …")
+
+def _monthly(series, scale10k=False):
+    s = (series / series.iloc[0] * 10_000) if scale10k else series
+    m = s.resample("ME").last().dropna()
+    return ([d.strftime("%b %y") for d in m.index],
+            [round(float(v), 2) for v in m.values])
+
+cum_labels, cum_mvpx = _monthly(mi, scale10k=True)
+_,          cum_sp   = _monthly(sp_idx, scale10k=True)
+srs_labels = [d.strftime("%b %y") for d in rs_mi.resample("ME").last().dropna().index]
+srs_mvpx   = [round(float(v), 2) for v in rs_mi.resample("ME").last().dropna().values]
+srs_sp     = [round(float(v), 2) for v in rs_sp.resample("ME").last().dropna().values]
+
+annual = []
+for yi in ann_mi.index:
+    sp_row = ann_sp.loc[ann_sp.index.year == yi.year]
+    if sp_row.empty:
+        continue
+    annual.append({"yr": int(yi.year),
+                   "mvpx": round(float(ann_mi.loc[yi]), 1),
+                   "sp":   round(float(sp_row.iloc[0]), 1)})
+
+STRESS_LABELS = {
+    "2008_GFC":   ("2008 GFC",        "Oct 2007 – Jun 2009"),
+    "2020_COVID": ("2020 COVID",      "Jan 2020 – Mar 2021"),
+    "2022_HIKES": ("2022 Rate Hikes", "Jan 2022 – Jan 2023"),
+}
+stress = []
+for sc, (title, period) in STRESS_LABELS.items():
+    if sc not in stress_res:
+        continue
+    r = stress_res[sc]
+    stress.append({"id": sc, "title": title, "period": period,
+                   "mvpxRet": round(r["tot_mi"], 1), "spRet": round(r["tot_sp"], 1),
+                   "mvpxDD":  round(r["pt_mi"], 1),   "spDD":  round(r["pt_sp"], 1)})
+
+# Holdings list = full index definition (all names). Performance metrics above
+# are computed on the names with >=80% history over the backtest window; any
+# late-listing names are flagged so the site stays consistent with the report.
+holdings = [{"t": t, "w": MVPX[t][0], "seg": MVPX[t][1], "cv": MVPX[t][2],
+             "backtested": t in active} for t in TICKERS]
+n_segments = len({MVPX[t][1] for t in TICKERS})
+n_tiers    = len({MVPX[t][2] for t in TICKERS})
+
+web_data = {
+    "meta": {
+        "generated":   datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "start":       str(mi.index[0].date()),
+        "end":         str(mi.index[-1].date()),
+        "start_year":  int(mi.index[0].year),
+        "end_year":    int(mi.index[-1].year),
+        "holdings":    len(TICKERS),
+        "backtested":  len(active),
+        "segments":    n_segments,
+        "tiers":       n_tiers,
+        "rebalance":   "Quarterly",
+        "rf":          0.04,
+        "source":      "Yahoo Finance via yfinance",
+    },
+    "metrics": {
+        "total_return": {"mvpx": round(tot_mi, 1),       "sp": round(tot_sp, 1)},
+        "cagr":         {"mvpx": round(cagr_mi*100, 1),  "sp": round(cagr_sp*100, 1)},
+        "max_dd":       {"mvpx": round(mdd_mi*100, 1),   "sp": round(mdd_sp*100, 1)},
+        "volatility":   {"mvpx": round(vol_mi*100, 1),   "sp": round(vol_sp*100, 1)},
+        "sharpe":       {"mvpx": round(shr_mi, 2),       "sp": round(shr_sp, 2)},
+        "beta":         {"mvpx": round(float(beta_mi), 2), "sp": 1.00},
+        "correlation":  {"mvpx": round(float(corr_all), 2), "sp": None},
+    },
+    "cumulative":    {"labels": cum_labels, "mvpx": cum_mvpx, "sp": cum_sp},
+    "sharpe_series": {"labels": srs_labels, "mvpx": srs_mvpx, "sp": srs_sp},
+    "annual":        annual,
+    "stress":        stress,
+    "holdings":      holdings,
+}
+
+with open("mvpx_data.js", "w") as f:
+    f.write("/* Auto-generated by mvpx_analysis.py — do not edit by hand. */\n")
+    f.write("window.MVPX_DATA = ")
+    json.dump(web_data, f, indent=2)
+    f.write(";\n")
+print("    ✓  mvpx_data.js  (website data)")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 9.  SUMMARY
